@@ -17,7 +17,8 @@ class ViewController: UIViewController {
     var usrIsInTheMiddleOfTypingANumber : Bool = false
     
     @IBAction func appendDigit(sender: UIButton) {
-        let digit = sender.currentTitle!
+        var digit = sender.currentTitle!
+        digit = display.text!.rangeOfString(".") != nil && digit == "." ? "" : digit
         if usrIsInTheMiddleOfTypingANumber {
             display.text = display.text! + digit
         } else {
@@ -58,6 +59,11 @@ class ViewController: UIViewController {
             display.text = "\(newValue)"
             usrIsInTheMiddleOfTypingANumber = false
         }
+    }
+    
+    func clear() {
+        brain.clear()
+        display.text = "0"
     }
 }
 

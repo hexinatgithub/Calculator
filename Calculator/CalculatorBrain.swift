@@ -13,7 +13,8 @@ class CalculatorBrain {
         case    Operand(Double)
         case    UnaryOperation(String, Double -> Double)
         case    BinaryOperation(String, (Double, Double) -> Double)
-        
+        case    SignalOperation(String, () -> Double)
+
         var description: String {
             get {
                 switch self {
@@ -23,6 +24,8 @@ class CalculatorBrain {
                     return "\(operation)"
                 case .BinaryOperation(let operation, _):
                     return "\(operation)"
+                case .SignalOperation:
+                    return "π"
                 }
             }
         }
@@ -41,6 +44,9 @@ class CalculatorBrain {
         learnOps(Op.BinaryOperation("×", *))
         learnOps(Op.BinaryOperation("÷") { $1 / $0 })
         learnOps(Op.UnaryOperation("√") { sqrt($0) })
+        learnOps(Op.UnaryOperation("sin") { sin($0) })
+        learnOps(Op.UnaryOperation("cos") { cos($0) })
+        learnOps(Op.SignalOperation("π") { M_PI })
     }
     
     private func evaluate(ops: [Op]) -> (result: Double?, remainOpStack: [Op]) {
@@ -52,8 +58,8 @@ class CalculatorBrain {
                 return (operand, raminStack)
             case .UnaryOperation(_ , let operation):
                 let operandEvaluate = evaluate(raminStack)
-                if let op = operandEvaluate.result {
-                    return (operation(op), raminStack)
+                if let op1 = operandEvaluate.result {
+                    return (operation(op1), raminStack)
                 }
             case .BinaryOperation(_, let operation):
                 let op1Evaluate = evaluate(raminStack)
@@ -63,6 +69,8 @@ class CalculatorBrain {
                         return (operation(op1, op2), op2Evaluate.remainOpStack)
                     }
                 }
+            case .SignalOperation(_, let operation):
+                return (operation(), raminStack)
             }
         }
         return (nil, ops)
@@ -93,5 +101,9 @@ class CalculatorBrain {
             }
         }
         return nil
+    }
+    
+    func clear() {
+        opStack.removeAll()
     }
 }
