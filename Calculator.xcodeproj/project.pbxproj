@@ -101,10 +101,7 @@
 			children = (
 				0F21B2131C5F904F00913205 /* ViewController.swift */,
 				0F2768481C66E0CE00B32571 /* CalculatorBrain.swift */,
-				0F21B2181C5F904F00913205 /* Assets.xcassets */,
 				0F21B2151C5F904F00913205 /* Main.storyboard */,
-				0F21B21A1C5F904F00913205 /* LaunchScreen.storyboard */,
-				0F21B21D1C5F904F00913205 /* Info.plist */,
 				0F21B23F1C5F90EA00913205 /* SupportFile */,
 			);
 			path = Calculator;
@@ -131,7 +128,10 @@
 		0F21B23F1C5F90EA00913205 /* SupportFile */ = {
 			isa = PBXGroup;
 			children = (
+				0F21B21A1C5F904F00913205 /* LaunchScreen.storyboard */,
+				0F21B21D1C5F904F00913205 /* Info.plist */,
 				0F21B2111C5F904F00913205 /* AppDelegate.swift */,
+				0F21B2181C5F904F00913205 /* Assets.xcassets */,
 			);
 			name = SupportFile;
 			sourceTree = "<group>";

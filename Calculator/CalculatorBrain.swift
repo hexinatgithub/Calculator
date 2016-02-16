@@ -31,7 +31,12 @@ class CalculatorBrain {
         }
     }
     
-    private var opStack = [Op]()
+    private var opStack = [Op]() {
+        didSet {
+            let ntf = NSNotification(name: "historyChange", object: self)
+            NSNotificationCenter.defaultCenter().postNotification(ntf)
+        }
+    }
     
     private var konwOps = [String : Op]()
     
@@ -77,9 +82,9 @@ class CalculatorBrain {
     }
     
     private func evaluate() -> Double? {
-        let (result, remainder) = evaluate(opStack)
+        let (result, _) = evaluate(opStack)
         if result != nil {
-            print("\(opStack) = \(result) left over \(remainder)")
+//            print("\(opStack) = \(result) left over \(remainder)")
             return result
         }
         return nil
@@ -103,7 +108,15 @@ class CalculatorBrain {
         return nil
     }
     
-    func clear() {
+    func reset() {
         opStack.removeAll()
+    }
+    
+    func history() -> String{
+        var h = ""
+        for op in opStack {
+            h = h + op.description + " "
+        }
+        return h
     }
 }

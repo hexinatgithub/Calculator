@@ -11,10 +11,24 @@ import UIKit
 class ViewController: UIViewController {
     
     @IBOutlet weak var display: UILabel!
-
+    @IBOutlet weak var historyDisplay: UILabel!
     private var brain = CalculatorBrain()
-    
     var usrIsInTheMiddleOfTypingANumber : Bool = false
+    var displayValue: Double {
+        get{
+            return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
+        }
+        set{
+            display.text = "\(newValue)"
+            usrIsInTheMiddleOfTypingANumber = false
+        }
+    }
+    
+    @IBAction func clear() {
+        brain.reset()
+        display.text = "0"
+        usrIsInTheMiddleOfTypingANumber = false
+    }
     
     @IBAction func appendDigit(sender: UIButton) {
         var digit = sender.currentTitle!
@@ -51,19 +65,17 @@ class ViewController: UIViewController {
         }
     }
     
-    var displayValue: Double{
-        get{
-            return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
-        }
-        set{
-            display.text = "\(newValue)"
-            usrIsInTheMiddleOfTypingANumber = false
-        }
+    func historyChange(notification: NSNotification) {
+        historyDisplay.text = brain.history()
     }
     
-    func clear() {
-        brain.clear()
-        display.text = "0"
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "historyChange:", name: "historyChange", object: brain)
+    }
+    
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self)
     }
 }
 
