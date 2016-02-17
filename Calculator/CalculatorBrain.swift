@@ -13,8 +13,9 @@ class CalculatorBrain {
         case    Operand(Double)
         case    UnaryOperation(String, Double -> Double)
         case    BinaryOperation(String, (Double, Double) -> Double)
-        case    SignalOperation(String, () -> Double)
-
+        case    Variable(String)
+        case    Constant(String, Double)
+        
         var description: String {
             get {
                 switch self {
@@ -24,8 +25,10 @@ class CalculatorBrain {
                     return "\(operation)"
                 case .BinaryOperation(let operation, _):
                     return "\(operation)"
-                case .SignalOperation:
-                    return "π"
+                case .Variable(let variable):
+                    return "\(variable)"
+                case .Constant(let constant, _):
+                    return "\(constant)"
                 }
             }
         }
@@ -33,61 +36,125 @@ class CalculatorBrain {
     
     private var opStack = [Op]() {
         didSet {
-            let ntf = NSNotification(name: "historyChange", object: self)
+            let ntf = NSNotification(name: "historyChange", object: nil)
             NSNotificationCenter.defaultCenter().postNotification(ntf)
+            print(self.description)
         }
     }
     
     private var konwOps = [String : Op]()
+    
+    private var variableValues = Dictionary<String, Double>()
+    
+    var description: String {
+        return multipleExpression()
+    }
+    
+    func setVariable(variable: String, toValue value: Double?) {
+        variableValues[variable] = value
+    }
+
+    private func expression(ops: [Op]) -> (dsp: String?, remainStack: [Op]) {
+        if !ops.isEmpty {
+            var remainStack = ops
+            let op = remainStack.removeLast()
+            switch op {
+            case .Variable(let variable):
+                return (variable, remainStack)
+            case .Operand(let operand):
+                return ("\(operand)", remainStack)
+            case .UnaryOperation(let operation, _):
+                let op1Description = expression(remainStack)
+                if var op = op1Description.dsp {
+                    op = op != "" ? op : "?"
+                    let exp = operation + "(" + op + ")"
+                    return (exp, op1Description.remainStack)
+                }
+            case .BinaryOperation(let operation, _):
+                func parentheses(inout op: String, ops: [Op]) {
+                    if op != "?" {
+                        if let item = ops.last {
+                            switch item{
+                            case .BinaryOperation:
+                                op = "(" + op + ")"
+                            default: break
+                            }
+                        }
+                    }
+                }
+                
+                let op1Description = expression(remainStack)
+                var op1 = op1Description.dsp ?? "?"
+                parentheses(&op1, ops: remainStack)
+                let op2Description = expression(op1Description.remainStack)
+                var op2 = op2Description.dsp ?? "?"
+                parentheses(&op2, ops: op1Description.remainStack)
+                let exp = op2 + operation + op1
+                return (exp, op2Description.remainStack)
+            case .Constant(let constant, _):
+                return (constant, remainStack)
+            }
+        }
+        return (nil, ops)
+    }
+
+    private func multipleExpression() -> String {
+        var dsc = ""
+        var separate = ""
+        var expressionDescription = expression(opStack)
+        while let s = expressionDescription.dsp {
+            dsc = s + separate + dsc
+            separate = ","
+            expressionDescription = expression(expressionDescription.remainStack)
+        }
+        return dsc
+    }
     
     init() {
         func learnOps(op: Op) {
             konwOps[op.description] = op
         }
         learnOps(Op.BinaryOperation("+", +))
-        learnOps(Op.BinaryOperation("-") { $1 - $0 })
+        learnOps(Op.BinaryOperation("−") { $1 - $0 })
         learnOps(Op.BinaryOperation("×", *))
         learnOps(Op.BinaryOperation("÷") { $1 / $0 })
         learnOps(Op.UnaryOperation("√") { sqrt($0) })
         learnOps(Op.UnaryOperation("sin") { sin($0) })
         learnOps(Op.UnaryOperation("cos") { cos($0) })
-        learnOps(Op.SignalOperation("π") { M_PI })
+        learnOps(Op.Constant("π", M_PI))
     }
     
     private func evaluate(ops: [Op]) -> (result: Double?, remainOpStack: [Op]) {
         if !ops.isEmpty {
-            var raminStack = ops
-            let op = raminStack.removeLast()
+            var remainStack = ops
+            let op = remainStack.removeLast()
             switch op {
             case .Operand(let operand):
-                return (operand, raminStack)
+                return (operand, remainStack)
+            case .Variable(let variable):
+                return (variableValues[variable], remainStack)
             case .UnaryOperation(_ , let operation):
-                let operandEvaluate = evaluate(raminStack)
+                let operandEvaluate = evaluate(remainStack)
                 if let op1 = operandEvaluate.result {
-                    return (operation(op1), raminStack)
+                    return (operation(op1), operandEvaluate.remainOpStack)
                 }
             case .BinaryOperation(_, let operation):
-                let op1Evaluate = evaluate(raminStack)
+                let op1Evaluate = evaluate(remainStack)
                 if let op1 = op1Evaluate.result {
                     let op2Evaluate = evaluate(op1Evaluate.remainOpStack)
                     if let op2 = op2Evaluate.result {
                         return (operation(op1, op2), op2Evaluate.remainOpStack)
                     }
                 }
-            case .SignalOperation(_, let operation):
-                return (operation(), raminStack)
+            case .Constant(_, let constantValue):
+                return (constantValue, remainStack)
             }
         }
         return (nil, ops)
     }
     
-    private func evaluate() -> Double? {
-        let (result, _) = evaluate(opStack)
-        if result != nil {
-//            print("\(opStack) = \(result) left over \(remainder)")
-            return result
-        }
-        return nil
+    func evaluate() -> Double? {
+        return evaluate(opStack).result
     }
     
     func pushOperand(operand: Double) -> Double? {
@@ -96,6 +163,11 @@ class CalculatorBrain {
             return result
         }
         return nil
+    }
+    
+    func pushOperand(symbol: String) -> Double? {
+        opStack.append(Op.Variable(symbol))
+        return evaluate()
     }
     
     func performOperation(operation: String) -> Double? {
@@ -108,15 +180,11 @@ class CalculatorBrain {
         return nil
     }
     
-    func reset() {
+    func clearOpStack() {
         opStack.removeAll()
     }
     
-    func history() -> String{
-        var h = ""
-        for op in opStack {
-            h = h + op.description + " "
-        }
-        return h
+    func clearVariables() {
+        variableValues.removeAll()
     }
 }

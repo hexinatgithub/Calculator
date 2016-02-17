@@ -12,21 +12,31 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var display: UILabel!
     @IBOutlet weak var historyDisplay: UILabel!
-    private var brain = CalculatorBrain()
+    private var brain = CalculatorBrain() {
+        didSet {
+//            NSNotificationCenter.defaultCenter().addObserver(self, selector: "historyChange:", name: "historyChange", object: nil)
+            print("did set brain")
+        }
+    }
     var usrIsInTheMiddleOfTypingANumber : Bool = false
-    var displayValue: Double {
+    var displayValue: Double? {
         get{
-            return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
+            return NSNumberFormatter().numberFromString(display.text!)?.doubleValue
         }
         set{
-            display.text = "\(newValue)"
+            if let value = newValue {
+                display?.text = "\(value)"
+            }else {
+                display?.text = " "
+            }
             usrIsInTheMiddleOfTypingANumber = false
         }
     }
     
     @IBAction func clear() {
-        brain.reset()
-        display.text = "0"
+        brain.clearOpStack()
+        brain.clearVariables()
+        displayValue = nil
         usrIsInTheMiddleOfTypingANumber = false
     }
     
@@ -48,34 +58,48 @@ class ViewController: UIViewController {
 
         let title = sender.currentTitle
         if let operation = title {
-            if let result = brain.performOperation(operation) {
+            displayValue = brain.performOperation(operation)
+        }
+    }
+
+    @IBAction func pushVariable(sender: UIButton) {
+        if usrIsInTheMiddleOfTypingANumber {
+            enter()
+        }
+        if let variable = sender.currentTitle {
+            displayValue = brain.pushOperand(variable)
+        }
+        usrIsInTheMiddleOfTypingANumber = false
+    }
+        
+    @IBAction func setVariable(sender: UIButton) {
+        if let variable = sender.currentTitle {
+            brain.setVariable(variable, toValue: displayValue)
+        }
+        displayValue = brain.evaluate()
+    }
+    
+    @IBAction func enter() {
+        usrIsInTheMiddleOfTypingANumber = false
+        if let value = displayValue {
+            if let result = brain.pushOperand(value) {
                 displayValue = result
             } else {
                 displayValue = 0
             }
         }
     }
-        
-    @IBAction func enter() {
-        usrIsInTheMiddleOfTypingANumber = false
-        if let result = brain.pushOperand(displayValue) {
-            displayValue = result
-        } else {
-            displayValue = 0
-        }
-    }
     
     func historyChange(notification: NSNotification) {
-        historyDisplay.text = brain.history()
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "historyChange:", name: "historyChange", object: brain)
+        historyDisplay.text = brain.description.isEmpty ? "" : (brain.description + "=")
     }
     
     deinit {
         NSNotificationCenter.defaultCenter().removeObserver(self)
+    }
+    
+    override func viewDidLoad() {
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "historyChange:", name: "historyChange", object: nil)
     }
 }
 
