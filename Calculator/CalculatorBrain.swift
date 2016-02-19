@@ -38,11 +38,13 @@ class CalculatorBrain {
         didSet {
             let ntf = NSNotification(name: "historyChange", object: nil)
             NSNotificationCenter.defaultCenter().postNotification(ntf)
-            print(self.description)
         }
     }
     
     private var konwOps = [String : Op]()
+//    private var program = [AnyObject]() {
+//        
+//    }
     
     private var variableValues = Dictionary<String, Double>()
     
