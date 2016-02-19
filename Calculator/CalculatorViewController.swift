@@ -12,12 +12,7 @@ class CalculatorViewController: UIViewController {
     
     @IBOutlet weak var display: UILabel!
     @IBOutlet weak var historyDisplay: UILabel!
-    private var brain = CalculatorBrain() {
-        didSet {
-//            NSNotificationCenter.defaultCenter().addObserver(self, selector: "historyChange:", name: "historyChange", object: nil)
-            print("did set brain")
-        }
-    }
+    private var brain = CalculatorBrain()
     var usrIsInTheMiddleOfTypingANumber : Bool = false
     var displayValue: Double? {
         get{
@@ -36,7 +31,7 @@ class CalculatorViewController: UIViewController {
     @IBAction func clear() {
         brain.clearOpStack()
         brain.clearVariables()
-        displayValue = nil
+        displayValue = 0.0
         usrIsInTheMiddleOfTypingANumber = false
     }
     
@@ -74,9 +69,11 @@ class CalculatorViewController: UIViewController {
         
     @IBAction func setVariable(sender: UIButton) {
         if let variable = sender.currentTitle {
-            brain.setVariable(variable, toValue: displayValue)
+            let index = variable.endIndex.predecessor()
+            brain.setVariable("\(variable[index])", toValue: displayValue)
         }
         displayValue = brain.evaluate()
+        usrIsInTheMiddleOfTypingANumber = false
     }
     
     @IBAction func enter() {
@@ -100,6 +97,11 @@ class CalculatorViewController: UIViewController {
     
     override func viewDidLoad() {
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "historyChange:", name: "historyChange", object: nil)
+    }
+    
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        brain.save()
     }
 }
 

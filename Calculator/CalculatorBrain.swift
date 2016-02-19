@@ -41,16 +41,47 @@ class CalculatorBrain {
         }
     }
     
-    private var konwOps = [String : Op]()
-//    private var program = [AnyObject]() {
-//        
-//    }
+    private var knowOps = [String : Op]()
+    
+    private var program: AnyObject { // guaranteed to be PropertyList
+        get {
+            return opStack.map { $0.description }
+        }
+        set {
+            if let opSymbols = newValue as? Array<String> {
+                var newOpStack = [Op]()
+                for opSymbol in opSymbols {
+                    if let operation = knowOps[opSymbol] {
+                        newOpStack.append(operation)
+                    } else if let operand = NSNumberFormatter().numberFromString(opSymbol)?.doubleValue {
+                        newOpStack.append(.Operand(operand))
+                    } else {
+                        newOpStack.append(.Variable(opSymbol))
+                    }
+                }
+                opStack = newOpStack
+            }
+        }
+    }
+    
+    private var programVariable: AnyObject {
+        get {
+            return variableValues
+        }
+        set {
+            if let variables = newValue as? Dictionary<String, Double> {
+                variableValues = variables
+            }
+        }
+    }
     
     private var variableValues = Dictionary<String, Double>()
     
     var description: String {
         return multipleExpression()
     }
+    
+    
     
     func setVariable(variable: String, toValue value: Double?) {
         variableValues[variable] = value
@@ -114,7 +145,7 @@ class CalculatorBrain {
     
     init() {
         func learnOps(op: Op) {
-            konwOps[op.description] = op
+            knowOps[op.description] = op
         }
         learnOps(Op.BinaryOperation("+", +))
         learnOps(Op.BinaryOperation("−") { $1 - $0 })
@@ -124,6 +155,7 @@ class CalculatorBrain {
         learnOps(Op.UnaryOperation("sin") { sin($0) })
         learnOps(Op.UnaryOperation("cos") { cos($0) })
         learnOps(Op.Constant("π", M_PI))
+        retrieveData()
     }
     
     private func evaluate(ops: [Op]) -> (result: Double?, remainOpStack: [Op]) {
@@ -173,7 +205,7 @@ class CalculatorBrain {
     }
     
     func performOperation(operation: String) -> Double? {
-        if let op = konwOps[operation] {
+        if let op = knowOps[operation] {
             opStack.append(op)
             if let result = evaluate() {
                 return result
@@ -188,5 +220,25 @@ class CalculatorBrain {
     
     func clearVariables() {
         variableValues.removeAll()
+    }
+    
+    deinit {
+        save()
+    }
+    
+    func save() {
+        let userDefaut = NSUserDefaults()
+        userDefaut.setObject(program, forKey: "program")
+        userDefaut.setObject(programVariable, forKey: "programVariable")
+    }
+    
+    private func retrieveData() {   // retrieve data
+        let userDefaut = NSUserDefaults()
+        if let data = userDefaut.valueForKey("program") {
+            program = data
+        }
+        if let data = userDefaut.valueForKey("programVariable") {
+            programVariable = data
+        }
     }
 }
