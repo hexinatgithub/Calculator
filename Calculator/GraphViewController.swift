@@ -48,29 +48,21 @@ class GraphViewController: UIViewController, GraphViewDataSource {
         graphView.setNeedsDisplay()
     }
 
-    func minAndMaxYValueForGraphView(minX minX: CGFloat, maxX: CGFloat) -> (minY: CGFloat, maxY: CGFloat)? {
-        if let result = brain?.evaluate() {
-            return (CGFloat(result), CGFloat(result))
-        } else if brain?.lastExpression?.rangeOfString("M") != nil {
-            brain?.variableValues["M"] = minX.native
-            let minY = brain?.evaluate()
-            brain?.variableValues["M"] = maxX.native
-            let maxY = brain?.evaluate()
-            brain?.variableValues["M"] = nil
-            return (CGFloat(minY!), CGFloat(maxY!))
+    func pointsForGraphView(sender: GraphView) -> [CGPoint]? {
+        if brain?.lastExpression?.rangeOfString("?") == nil {
+            var points = [CGPoint]()
+            var minX = sender.minX.native
+            let maxX = sender.maxX.native
+            let increment = sender.incrementX.native
+            while minX <= maxX {
+                if let y = brain?.yFor("M", value: minX) {
+                    points.append(CGPoint(x: minX, y: y))
+                }
+                minX += increment
+            }
+            return points
         }
         return nil
     }
-
-    
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }

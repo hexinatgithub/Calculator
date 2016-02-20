@@ -75,7 +75,7 @@ class CalculatorBrain {
         }
     }
     
-    var variableValues = Dictionary<String, Double>()
+    private var variableValues = Dictionary<String, Double>()
     
     var description: String {
         return multipleExpression()
@@ -144,6 +144,13 @@ class CalculatorBrain {
     
     var lastExpression: String? {
         return expression(opStack).dsp
+    }
+    
+    func yFor(variable: String, value: Double) -> Double? {
+        variableValues[variable] = value
+        let y = evaluate()
+        variableValues[variable] = nil
+        return y
     }
     
     init() {
