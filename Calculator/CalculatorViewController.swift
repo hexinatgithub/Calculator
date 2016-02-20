@@ -103,5 +103,16 @@ class CalculatorViewController: UIViewController {
         super.viewWillDisappear(animated)
         brain.save()
     }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if let identifier = segue.identifier {
+            if identifier == "Graph" {
+                if let gvc = segue.destinationViewController as? GraphViewController {
+                    gvc.brain = brain
+                    gvc.title = brain.lastExpression
+                }
+            }
+        }
+    }
 }
 

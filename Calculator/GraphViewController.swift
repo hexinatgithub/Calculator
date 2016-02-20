@@ -9,14 +9,21 @@
 import UIKit
 
 class GraphViewController: UIViewController, GraphViewDataSource {
-
+    
     // MARK: Modal
-
+    var canTouch: Bool = true {
+        didSet {
+            graphView.userInteractionEnabled = canTouch
+        }
+    }
+    
+    var brain: CalculatorBrain?
     
     // MARK: View
     @IBOutlet var graphView: GraphView! {
         didSet {
             graphView.dataSource = self
+            graphView.userInteractionEnabled = canTouch
             let pinch = UIPinchGestureRecognizer(target: graphView, action: "pinch:")
             graphView.addGestureRecognizer(pinch)
             let pan = UIPanGestureRecognizer(target: graphView, action: "pan:")
@@ -41,7 +48,21 @@ class GraphViewController: UIViewController, GraphViewDataSource {
         graphView.setNeedsDisplay()
     }
 
+    func minAndMaxYValueForGraphView(minX minX: CGFloat, maxX: CGFloat) -> (minY: CGFloat, maxY: CGFloat)? {
+        if let result = brain?.evaluate() {
+            return (CGFloat(result), CGFloat(result))
+        } else if brain?.lastExpression?.rangeOfString("M") != nil {
+            brain?.variableValues["M"] = minX.native
+            let minY = brain?.evaluate()
+            brain?.variableValues["M"] = maxX.native
+            let maxY = brain?.evaluate()
+            brain?.variableValues["M"] = nil
+            return (CGFloat(minY!), CGFloat(maxY!))
+        }
+        return nil
+    }
 
+    
     /*
     // MARK: - Navigation
 

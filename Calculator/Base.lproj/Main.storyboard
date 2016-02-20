@@ -232,7 +232,7 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="24"/>
                                 <state key="normal" title="G"/>
                                 <connections>
-                                    <segue destination="cyV-hR-yBQ" kind="showDetail" id="gsK-Dm-CME"/>
+                                    <segue destination="cyV-hR-yBQ" kind="showDetail" identifier="Graph" id="gsK-Dm-CME"/>
                                 </connections>
                             </button>
                         </subviews>
@@ -380,7 +380,7 @@
                         <viewControllerLayoutGuide type="top" id="wYV-lN-Yy0"/>
                         <viewControllerLayoutGuide type="bottom" id="dZE-UR-TF6"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="nAo-BB-qkl" customClass="GraphView" customModule="Calculator" customModuleProvider="target">
+                    <view key="view" contentMode="redraw" id="nAo-BB-qkl" customClass="GraphView" customModule="Calculator" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>

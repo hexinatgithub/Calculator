@@ -75,12 +75,11 @@ class CalculatorBrain {
         }
     }
     
-    private var variableValues = Dictionary<String, Double>()
+    var variableValues = Dictionary<String, Double>()
     
     var description: String {
         return multipleExpression()
     }
-    
     
     
     func setVariable(variable: String, toValue value: Double?) {
@@ -141,6 +140,10 @@ class CalculatorBrain {
             expressionDescription = expression(expressionDescription.remainStack)
         }
         return dsc
+    }
+    
+    var lastExpression: String? {
+        return expression(opStack).dsp
     }
     
     init() {
